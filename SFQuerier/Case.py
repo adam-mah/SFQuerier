@@ -186,7 +186,7 @@ class Case:
     def delete(self, caseId=None):
         """
         Delete SF case
-        :param id: case ID to be deleted
+        :param caseId:
         :return: True/False
         """
         if caseId is not None:

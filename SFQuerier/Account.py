@@ -38,7 +38,7 @@ class Account:
     def get_by_id(self, accountId=None):
         """
             Get SF account
-            :param id: Account ID
+            :param accountId:
             :return: Account/False if account was queried
             """
         if accountId is not None:
@@ -93,7 +93,7 @@ class Account:
     def purge(self, accountId=None):
         """
                 Delete SF account and its records
-                :param id: Account ID to be deleted
+                :param accountId:
                 :return: Dict [bool, cases, opportunities]
                 """
         if accountId is not None:
@@ -182,7 +182,7 @@ class Account:
     def update(self, accountId=None, json={}):
         """
         Update SF account
-        :param id: Account ID
+        :param accountId:
         :param json: JSON attributes object to be updated ex: {'Name': 'Mahameed'}
         :return: True/False if account was updated/!updated
         """
@@ -219,7 +219,7 @@ class Account:
     def delete(self, accountId=None):
         """
         Delete SF account
-        :param id: Account ID to be deleted
+        :param accountId:
         :return: True/False
         """
         if accountId is not None:

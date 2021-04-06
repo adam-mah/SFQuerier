@@ -4,10 +4,7 @@
 # @File    : CaseComment.py
 
 """
-TODO:Case.Comment.add
 TODO:Case.Comment.get
-TODO:Case.Comment.delete
-TODO:Case.Comment.update
 """
 import collections
 

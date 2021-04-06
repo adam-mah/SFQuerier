@@ -3,11 +3,6 @@
 # @Author  : Adam Mahameed
 # @File    : Contact.py
 
-"""
-TODO:Contact getters
-TODO:Contact.purge() #Deletes contact and all of its cases
-"""
-
 import collections
 
 from simple_salesforce import SalesforceMalformedRequest, SalesforceResourceNotFound
@@ -30,7 +25,6 @@ class Contact:
         if contactId is not None:
             try:
                 contact = self._sf.Contact.get(contactId)
-                # account =self.sf.query("SELECT Id,AccountNumber,Name,CreatedDate,Website FROM Account WHERE Id= '{id}'".format(id=id))
                 return Parser.parse(contact)
             except SalesforceResourceNotFound as e:  # Not found
                 print(

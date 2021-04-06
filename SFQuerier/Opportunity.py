@@ -24,7 +24,7 @@ class Opportunity:
     def delete(self, opportunityId=None):
         """
         Delete an account opportunity
-        :param id: Opportunity ID to be deleted
+        :param opportunityId:
         :return: True/False if deleted
         """
         if opportunityId is not None:
