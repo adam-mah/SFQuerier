@@ -27,10 +27,10 @@ class Contract:
 
     def get_by_id(self, contractId=None):
         """
-                    Get SF contract
-                    :param contractId: contract ID
-                    :return: Contract/False if contract was queried
-                    """
+        Get SF contract
+        :param contractId: contract ID
+        :return: Contract/False if contract was queried
+        """
         if contractId is not None:
             try:
                 contract = self._sf.Contract.get(contractId)
@@ -43,11 +43,11 @@ class Contract:
                                                                                         'errorCode']))
                 return False
             except SalesforceMalformedRequest as e:  # Field doesn't exist
-                print("[GET]{errorCode}: Malformed request {url}. {message} ID: {id}".format(
+                print("[GET]{errorCode}: Malformed request {url}. {message} ID: {contractId}".format(
                     message=e.content[0]['message'],
                     url=e.url,
                     errorCode=e.content[0][
-                        'errorCode'], id=contractId))
+                        'errorCode'], contractId=contractId))
                 return False
             except Exception as e:
                 print("Something went wrong!")
@@ -59,9 +59,9 @@ class Contract:
             return False
 
     def get_account_contracts(self, accountId=None):
-        contacts = self._sf.query(
+        contracts = self._sf.query(
             f"SELECT Id,ContractNumber,ContractTerm,CreatedById,CreatedDate,Description,OwnerId,AccountId FROM Contract WHERE AccountId='{accountId}'")
-        return Parser.parse(contacts)
+        return Parser.parse(contracts)
 
     def get_count(self):
         """
@@ -72,14 +72,14 @@ class Contract:
 
     def create(self, json={}):
         """
-        Create new contract, 'LastName' field is required!
-        :param json: JSON Formatted contact data
-        :return: Created account ID
+        Create new contract
+        :param json: JSON Formatted contract data
+        :return: Created contract ID
         """
         try:
             status = self._sf.Contract.create(json)
             if isinstance(status, collections.OrderedDict):
-                if status['success'] == True:
+                if status['success'] is True:
                     return status['id']
                 else:
                     raise Exception("Contact creation failed")
@@ -106,15 +106,15 @@ class Contract:
 
     def update(self, contractId=None, json={}):
         """
-        Update SF contact
-        :param contractId:
+        Update SF contract
+        :param contractId: Contract ID to be updated
         :param json: JSON attributes object to be updated
         :return: True/False if contract was updated/!updated
         """
         if contractId is not None:
             try:
                 status = self._sf.Contract.update(contractId,
-                                                  json)  # Status code 204 is returned if info was updated succesfully
+                                                  json)  # Status code 204 is returned if info was updated successfully
                 if status == 204:
                     return True
             except SalesforceResourceNotFound as e:  # Not found

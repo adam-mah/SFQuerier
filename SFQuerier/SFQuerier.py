@@ -65,6 +65,29 @@ class SalesforceQ:
                 raise SalesforceAuthenticationFailed('INVALID AUTH',
                                                      'You must submit username and password either a security token or '
                                                      'organizationId for authentication')
+            else:
+                """SOQL queries: 
+                
+                query:  #Equivalent to .get(path='query', params='q=SELECT Id, Name FROM Contact WHERE LastName = 'Adam'')
+                    .query("SELECT Id, Name FROM Contact WHERE LastName = 'Adam'") 
+                
+                query_more:
+                If, due to an especially large result, Salesforce adds a nextRecordsUrl to your query result, 
+                such as "nextRecordsUrl" : "/services/data/v26.0/query/01gD0000002HU6KIAW-2000", you can pull the 
+                additional results with either the ID or the full URL (if using the full URL, you must pass 'True' as 
+                your second argument) 
+                
+                    .query_more("01gD0000002HU6KIAW-2000")
+                    .query_more("/services/data/v26.0/query/01gD0000002HU6KIAW-2000", True)
+                
+                query_all:
+                A convenience of query_more, to retrieve all of the results in a single local method call use
+                    .query_all("SELECT Id, Email FROM Contact WHERE LastName = 'Jones'")
+                """
+                self.query = self.sf.query
+                self.query_more = self.sf.query_more
+                self.query_all = self.sf.query_all
+                self.search = self.sf.search
         else:
             raise SalesforceAuthenticationFailed('INVALID AUTH',
                                                  'You must submit username and password either a security token or '
@@ -84,6 +107,65 @@ class SalesforceQ:
         try:
             res = self.sf.restful(path=path, params=params, method='GET', **kwargs)
             return res
+        except SalesforceResourceNotFound as e:
+            print(
+                "[GET]{errorCode}: Resource {name} not found. {message}".format(message=e.content[0]['message'],
+                                                                                name=e.resource_name,
+                                                                                errorCode=e.content[0][
+                                                                                    'errorCode']))
+            return False
+        except SalesforceMalformedRequest as e:  # Deletion failed (could be due account being associated to existing cases)
+            print("[GET]{errorCode}: Malformed request {url}. {message}".format(
+                message=e.content[0]['message'], url=e.url, errorCode=e.content[0]['errorCode']))
+            return False
+        except Exception as e:
+            print("Something went wrong!")
+            print(e)
+        return False
+
+    def get_sobject(self, sobject=None, sobject_id=None):
+        """Allows you to make a direct GET REST call if you know the path
+        EXAMPLE: .get(path='sobjects/Account/0017j00000VLkZtAAL', params={"fields" : "Name"}))
+                Arguments:
+                * path: The path of the request
+                    Example: sobjects/User/ABC123/password'
+                * params: dict of parameters to pass to the path
+                * method: HTTP request method, default GET
+                * other arguments supported by requests.request (e.g. json, timeout)
+                :return JSON objects list / False if issue has occurred
+                """
+        try:
+            if isinstance(sobject_id, str):
+                sobject_data = self.__getattr__(sobject).get(sobject_id)
+                return [Parser.parse(sobject_data)]
+            elif isinstance(sobject_id, list):
+                sobjects_data = []
+                for sobject_sid in sobject_id:
+                    sobject_data = self.__getattr__(sobject).get(sobject_sid)
+                    sobjects_data.append(Parser.parse(sobject_data))
+                return sobjects_data
+        except SalesforceResourceNotFound as e:
+            print(
+                "[GET]{errorCode}: Resource {name} not found. {message}".format(message=e.content[0]['message'],
+                                                                                name=e.resource_name,
+                                                                                errorCode=e.content[0][
+                                                                                    'errorCode']))
+            return False
+        except SalesforceMalformedRequest as e:  # Deletion failed (could be due account being associated to existing cases)
+            print("[GET]{errorCode}: Malformed request {url}. {message}".format(
+                message=e.content[0]['message'], url=e.url, errorCode=e.content[0]['errorCode']))
+            return False
+        except Exception as e:
+            print("Something went wrong!")
+            print(e)
+        return False
+
+    def get_sobject_type(self, sobject_id):
+        """Get sobject type by ID"""
+        try:
+            res = self.get(path=f'ui-api/record-ui/{sobject_id}')
+            od = collections.OrderedDict(sorted(res['layouts'].items(), key=lambda x: x[1]))
+            return list(od.keys())[0]
         except SalesforceResourceNotFound as e:
             print(
                 "[GET]{errorCode}: Resource {name} not found. {message}".format(message=e.content[0]['message'],
@@ -177,9 +259,9 @@ class SalesforceQ:
         except SalesforceResourceNotFound as e:
             print(
                 "[DELETE]{errorCode}: Resource {name} not found. {message}".format(message=e.content[0]['message'],
-                                                                                  name=e.resource_name,
-                                                                                  errorCode=e.content[0][
-                                                                                      'errorCode']))
+                                                                                   name=e.resource_name,
+                                                                                   errorCode=e.content[0][
+                                                                                       'errorCode']))
             return False
         except SalesforceMalformedRequest as e:
             print("[DELETE]{errorCode}: Malformed request {url}. {message}".format(
@@ -189,3 +271,14 @@ class SalesforceQ:
             print("Something went wrong!")
             print(e)
         return False
+
+    def __getattr__(self, name):
+        """
+        Every salesforce object without a written class can still access the following functions:
+        metadata / describe / describe_layout / get / get_by_custom_id / create / upsert / update / delete / deleted / updated
+        More information at SFType Class:
+         https://github.com/simple-salesforce/simple-salesforce/blob/5d921f3dd32a69472b31d435544ce9c5a1d5eba3/simple_salesforce/api.py#L638
+        :param name: sobject name
+        :return: SFType object
+        """
+        return self.sf.__getattr__(name)

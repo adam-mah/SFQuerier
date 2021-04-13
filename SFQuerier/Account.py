@@ -38,14 +38,20 @@ class Account:
     def get_by_id(self, accountId=None):
         """
             Get SF account
-            :param accountId:
-            :return: Account/False if account was queried
+            :param accountId: ID string / list of IDs
+            :return: JSON, JSON format list / False if account was not queried
             """
         if accountId is not None:
             try:
-                #account = self._sf.Account.get(accountId)
-                account = self._sf.query_all(f"SELECT Id,AccountNumber,Name,CreatedDate,Website FROM Account WHERE isDeleted=TRUE")
-                return Parser.parse(account)
+                if isinstance(accountId, str):
+                    account = self._sf.Account.get(accountId)
+                    return [Parser.parse(account)]
+                elif isinstance(accountId, list):
+                    accounts = []
+                    for acc_id in accountId:
+                        account = self._sf.Account.get(acc_id)
+                        accounts.append(Parser.parse(account))
+                    return accounts
             except SalesforceResourceNotFound as e:  # Not found
                 print(
                     "[GET]{errorCode}: Resource {name} not found. {message}".format(message=e.content[0]['message'],

@@ -71,6 +71,7 @@ class Contact:
                 :param contactId: Contact ID to be deleted
                 :return: Dict [bool, cases]
                 """
+        sf.Adam
         if contactId is not None:
             try:
                 """Delete cases"""
